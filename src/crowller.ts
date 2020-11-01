@@ -1,73 +1,40 @@
-// ts -> .d.ts 翻译文件 -> js
-import fs from 'fs'
-import path from 'path'
-import superagent from 'superagent'
-import cheerio from 'cheerio'
+import fs from 'fs';
+import path from 'path';
+import superagent from 'superagent';
+import DellAnalyzer from './dellAnalyzer';
 
-interface Course {
-	title: string,
-	count: number
-}
-
-interface CourseResult {
-	time: number,
-	data: Course[]
-}
-
-interface Content {
-	[propName: number]: Course[]
+export interface Analyzer {
+  analyze: (html: string, filePath: string) => string
 }
 
 class Crowller {
-	private secret = 'x3b174jsx'
-	private url = `http://www.dell-lee.com/typescript/demo.html?secret=${this.secret}`
-	// 根据html节点获取课程内容
-	getCourseInfo(html: string) {
-		const $ = cheerio.load(html)
-		const courseItems = $('.course-item')
-		const courseInfo: Course[] = []
+  private filePath = path.resolve(__dirname, '../data/course.json')
 
-		courseItems.map((index, element) => {
-			const descs = $(element).find('.course-desc')
-			const title = descs.eq(0).text()
-			const count = parseInt(descs.eq(1).text().split('：')[1])
+  // 生成html内容
+  private async getRawHtml() {
+    const result = await superagent.get(this.url);
+    return result.text;
+  }
 
-			courseInfo.push({
-				title,
-				count,
-			})
-		})
-		return {
-			time: new Date().getTime(),
-			data: courseInfo,
-		}
-	}
-	// 生成html内容
-	async getRawHtml() {
-		const result = await superagent.get(this.url)
-		return result.text
-	}
-	// 生成json文件内容
-	generateJsonContent(courseInfo: CourseResult) {
-		const filePath = path.resolve(__dirname, '../data/course.json')
-		let fileContent: Content = {}
-		// // 判断文件路径对应的文件是否存在
-		if (fs.existsSync(filePath)) {
-			fileContent = JSON.parse(fs.readFileSync(filePath, 'utf-8'))
-		}
-		fileContent[courseInfo.time] = courseInfo.data
-		fs.writeFileSync(filePath, JSON.stringify(fileContent))
-	}
-	// 爬虫内容
-	async initSpiderProcess() {
-		const html = await this.getRawHtml()
-		const courseInfo = this.getCourseInfo(html)
-		this.generateJsonContent(courseInfo)
-	}
+  private writeFile(content: string) {
+    fs.writeFileSync(this.filePath, content);
+  }
 
-	constructor() {
-		this.initSpiderProcess()
-	}
+  // 爬虫内容
+  private async initSpiderProcess() {
+    const html = await this.getRawHtml();
+    const fileContent = this.analyzer.analyze(html, this.filePath);
+    this.writeFile(fileContent);
+  }
+
+  constructor(private url: string, private analyzer: Analyzer) {
+    this.initSpiderProcess();
+  }
 }
 
-const crowller = new Crowller()
+const secret = 'x3b174jsx';
+const url = `http://www.dell-lee.com/typescript/demo.html?secret=${secret}`;
+
+const analyzer = DellAnalyzer.getInstance();
+new Crowller(url, analyzer);
+console.log('112')
