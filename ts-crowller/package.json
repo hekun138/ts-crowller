@@ -4,7 +4,7 @@
 	"description": "",
 	"main": "index.js",
 	"scripts": {
-		"tsnode": "ts-node ./src/crowller.ts",
+		"tsnode": "ts-node src/utils/crowller.ts",
 		"dev:build": "tsc -w",
 		"dev:start": "nodemon node ./build/index.js",
 		"dev": "tsc && concurrently npm:dev:*"
