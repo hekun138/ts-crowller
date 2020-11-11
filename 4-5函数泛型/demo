@@ -1,0 +1,22 @@
+// 泛型 generic 泛指的类型
+function join<T>(first: T, second: T) {
+  return `${first}${second}`
+}
+// T[]
+function map<T>(params: Array<T>) {
+  return params
+}
+
+// 用泛型T作为返回结果
+function anotherJoin<T>(first: T, second: T): T {
+  return first
+}
+
+// 两个泛型
+function method<T, P>(first: T, second: P) {
+  return `${first}${second}`
+}
+
+join<number>(1, 2)
+map<string>(['123'])
+method<number, string>(1, '1')
